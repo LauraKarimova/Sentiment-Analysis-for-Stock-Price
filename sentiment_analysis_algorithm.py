@@ -15,9 +15,11 @@ from nltk.stem import WordNetLemmatizer
 from rake_nltk import Rake 
 from datetime import date, timedelta
 
-# Initialize API to get news directly from the browser.
+
+# Initialize API to create a request directly from the browser.
 url = 'https://newsapi.org/v2/everything?'
 api_key = 'c1a64fea148341ed92239270ee28c94c' 
+
 
 # Create function to take raw data from the API and process it into a list in order to transform it into a pandas dataframe.
 def get_articles(file): 
@@ -36,7 +38,7 @@ def get_articles(file):
     return article_results
 
 
-# Collect the first 100 articles to check the API and the working of the function 
+# Collect the first 100 articles to check the API and the working of the function.
 from_date = date.today() - timedelta(days=30)
 
 parameters_headlines = {
@@ -52,13 +54,14 @@ response_headline = requests.get(url, params = parameters_headlines)
 response_json_headline = response_headline.json()
 
 responses = response_json_headline["articles"]
-# Transform the data from JSON dictionary to a pandas data frame
+# Transform the data from JSON dictionary to a pandas data frame.
 news_articles_df = pd.DataFrame(get_articles(responses))
-# Print the head to check the format and the working of the get_articles function
+# Print the head to check the format and the working of the get_articles function.
 news_articles_df.head()
 len(news_articles_df)
 
-# Create a list with various new sources
+
+# Create a list with various new sources and then make a request to get news from the given list of websites.
 responses = list() 
 domains = ['wsj.com', 'finviz.com','nyse.com','bbc.co.uk','techcrunch.com', 'nytimes.com','bloomberg.com','businessinsider.com',
              'cbc.ca','cnbc.com','cnn.com','ew.com','espn.go.com','espncricinfo.com','foxnews.com', 'apnews.com',
@@ -82,51 +85,50 @@ for domain in domains:
     news_articles_df=news_articles_df.append(pd.DataFrame(get_articles(responses)))
 
 
-# Checking step
+# Print the head to check the format and the working of the get_articles function.
 print(news_articles_df.shape)
 news_articles_df.head()
 
 
-# Create function to extract just the name of the source of the news article and exclude other details
+# Create function to extract just the name of the source of the news article and exclude other details.
 def source_getter(df):
     source = []
     for source_dict in df['source']:
         source.append(source_dict['name'])
     df['source'] = source 
 
-# this fuincton extracts the source name from the source dictionary as seen above
 source_getter(news_articles_df)
 
 
-# converted the publication date to date time format for future analysis
+# Convertation the publication date to the format for future analysis.
 news_articles_df['pub_date'] = pd.to_datetime(news_articles_df['pub_date']).apply(lambda x: x.date())
 
 
-#look for missing data
+# Check if the missing data exist
 news_articles_df.isnull().sum() 
 
 
-# droping the rows with missing data 
+# Drop the rows with missing data if they exist.
 news_articles_df.dropna(inplace=True)
 news_articles_df = news_articles_df[~news_articles_df['description'].isnull()]
-# summarize the number of rows and columns in the dataset
+
+
+# Summarize the number of rows and columns in the clear dataset.
 print(news_articles_df.isnull().sum())
 print(news_articles_df.shape)
 
 
-
-# combine the title and the content to get one dataframe column
+# Combine the title and the content to get one dataframe column
 news_articles_df['combined_text'] = news_articles_df['title'].map(str) +" "+ news_articles_df['content'].map(str) 
-
-
 news_articles_df.head()
 
 
-
-# Function to remove non-ascii characters from the text
+# Create function to remove non-ascii characters from the text
 def _removeNonAscii(s): 
     return "".join(i for i in s if ord(i)<128)
-# function to remove the punctuations, apostrophe, special characters using regular expressions
+
+
+# Create function to remove the punctuations, apostrophe, special characters using regular expressions.
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"what's", "what is ", text)
@@ -148,7 +150,8 @@ def clean_text(text):
     text = _removeNonAscii(text)
     text = text.strip()
     return text
-# stop words are the words that convery little to no information about the actual content like the words:the, of, for etc
+
+# Determine stop words as the words that convery little to no information about the actual content like the words: the, of, for etc.
 def remove_stopwords(word_tokens):
     filtered_sentence = [] 
     stop_words = stopwords.words('english')
@@ -158,36 +161,34 @@ def remove_stopwords(word_tokens):
         if w not in stop_words: 
             filtered_sentence.append(w) 
     return filtered_sentence
-# function for lemmatization 
+
+
+# Create function for lemmatization.
 def lemmatize(x):
     lemmatizer = WordNetLemmatizer()
     return' '.join([lemmatizer.lemmatize(word) for word in x])
   
-  
-  
-  
-  # splitting a string, text into a list of tokens
+    
+# Split a string, text into a list of tokens.
 tokenizer = RegexpTokenizer(r'\w+')
 def tokenize(x): 
     return tokenizer.tokenize(x)
   
-  
-  
-  
+
 import nltk
 nltk.download('omw-1.4')
 
 
-# applying all of these functions to the our dataframe 
+# Apply all of these functions to the our dataframe.
 news_articles_df['combined_text'] = news_articles_df['combined_text'].map(clean_text)
 news_articles_df['tokens'] = news_articles_df['combined_text'].map(tokenize)
 news_articles_df['tokens'] = news_articles_df['tokens'].map(remove_stopwords)
 news_articles_df['lems'] =news_articles_df['tokens'].map(lemmatize)
 
 
+# Print the head to check the format and the working of the get_articles function.
 news_articles_df.head()
 print(len(news_articles_df))
-
 
 
 # finding the keywords using the rake algorithm from NLTK
