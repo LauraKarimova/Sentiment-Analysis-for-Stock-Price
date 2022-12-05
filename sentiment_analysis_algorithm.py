@@ -191,8 +191,7 @@ news_articles_df.head()
 print(len(news_articles_df))
 
 
-# finding the keywords using the rake algorithm from NLTK
-# rake is Rapid Automatic Keyword Extraction algorithm, and is used for domain independent keyword extraction
+# Find keywords using the rake algorithm from NLTK (rake is Rapid Automatic Keyword Extraction algorithm, and is used for domain independent keyword extraction)
 news_articles_df['keywords'] = ""
 for index,row in news_articles_df.iterrows():
     comb_text = row['combined_text']
@@ -202,32 +201,32 @@ for index,row in news_articles_df.iterrows():
     row['keywords'] = list(key_words_dict.keys())
   
 
-
-
-# applying the fucntion to the dataframe
+# Apply the fucntion to the dataframe.
 news_articles_df['keywords'] = news_articles_df['keywords'].map(remove_stopwords)
 news_articles_df['lems'] =news_articles_df['keywords'].map(lemmatize)
 
-
+# Print the head to check the format and the working of the get_articles function.
 news_articles_df.head()
 
 
+# Save modified dataframe into csv file.
 news_articles_df.to_csv('news_articles_clean.csv', index = False)
 
 
-# Checking the combined data once again to ensure no null value is present
+# Check the data once again to ensure no null value is present.
 print(news_articles_df.isnull().sum())
 news_articles_df.dropna(inplace=True)
 print(news_articles_df.shape)
 
 
-
+#  Create two columns in order to put calculated value there.
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 sia = SIA()
 results = []
 news_articles_df['pol_score'] = ''
 news_articles_df['label'] = 0
 
+# Calculating the score for each new.
 for i, row in news_articles_df.iterrows():
     pol_score = sia.polarity_scores(row['lems'])
     pol_score['headline'] = row['lems']
@@ -241,39 +240,11 @@ for i, row in news_articles_df.iterrows():
         news_articles_df['label'][i] = 'neutral'
     
 
-from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
-sia = SIA()
-results = []
-news_articles_df['pol_score'] = ''
-news_articles_df['label'] = 0
-
-for i, row in news_articles_df.iterrows():
-    pol_score = sia.polarity_scores(row['lems'])
-    pol_score['headline'] = row['lems']
-    results.append(pol_score)
-    news_articles_df['pol_score'][i] = pol_score['compound']
-    if pol_score['compound'] > 0.2:
-        news_articles_df['label'][i] = 'positive'
-    elif pol_score['compound'] < -0.2:
-        news_articles_df['label'][i] = 'negative'
-    else:
-        news_articles_df['label'][i] = 'neutral'
-    
-
-# word count of news headlines is calculated
-#headlines_polarity['word_count'] = headlines_polarity['headline'].apply(lambda x: len(str(x).split()))
-
-
-
-
-
+# Check the data once again to ensure with the dataframe format
 news_articles_df
 
 
-
-
+# Save received datafram as csv file.
 writer = pd.ExcelWriter('data_to_plot_dashboard.xlsx')
 news_articles_df.to_excel(writer)
 writer.save()
-
-
